@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Books</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Books</h1>
+
+    <div id="status" class="text-gray-600 mb-3">Loading...</div>
+
+    <div class="overflow-x-auto bg-white shadow-sm ring-1 ring-gray-200 rounded">
+        <table class="min-w-full">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="text-left px-4 py-2 border-b">ID</th>
+                <th class="text-left px-4 py-2 border-b">ISBN</th>
+                <th class="text-left px-4 py-2 border-b">Title</th>
+                <th class="text-left px-4 py-2 border-b">Author</th>
+                <th class="text-left px-4 py-2 border-b">Category</th>
+                <th class="text-left px-4 py-2 border-b">Price</th>
+                <th class="text-left px-4 py-2 border-b">Stock</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function loadBooks() {
+        const status = document.getElementById('status');
+        const tbody = document.getElementById('tbody');
+        try {
+            const res = await fetch('/api/books');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const books = await res.json();
+            status.textContent = `Loaded ${books.length} book(s).`;
+            tbody.innerHTML = '';
+            books.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+            <td class="px-4 py-2 border-b">${b.id ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.isbn ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.title ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.author ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.category?.name ?? b.categoryName ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.price ?? ''}</td>
+            <td class="px-4 py-2 border-b">${b.stock ?? ''}</td>
+          `;
+                tbody.appendChild(tr);
+            });
+            if (books.length === 0) {
+                tbody.innerHTML = `<tr><td class="px-4 py-4 text-gray-500" colspan="7">No books found.</td></tr>`;
+            }
+        } catch (e) {
+            console.error(e);
+            status.className = 'text-red-600 mb-3';
+            status.textContent = 'Failed to load books.';
+            tbody.innerHTML = `<tr><td class="px-4 py-4 text-red-600" colspan="7">${e.message}</td></tr>`;
+        }
+    }
+    loadBooks();
+</script>
+</body>
+</html>
+``
