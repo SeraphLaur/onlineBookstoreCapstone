@@ -1,0 +1,79 @@
+package com.capstone.onlineBookstore.config;
+
+import com.capstone.onlineBookstore.security.AppUserDetailsService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+public class SecurityConfig {
+
+    private final AppUserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
+
+    public SecurityConfig(AppUserDetailsService userDetailsService,
+                          PasswordEncoder passwordEncoder) {
+        this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService); // <-- required in SS 7
+        provider.setPasswordEncoder(passwordEncoder);             // still set encoder
+        return provider;
+    }
+
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                // Authorize
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/register", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+
+                // Form login (Spring Security default login page for quick start)
+                .formLogin(form -> form
+                        .loginPage("/login")            // Your custom login page endpoint (GET)
+                        .loginProcessingUrl("/login")   // POST target for credentials
+                        .usernameParameter("email")     // match form field name
+                        .passwordParameter("password")  // match form field name
+                        .defaultSuccessUrl("/books", true)
+                        .failureUrl("/login?error=true")
+                        .permitAll()
+                )
+
+                // Logout
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+
+                // Sessions
+                .sessionManagement(sess -> sess
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)   // prevent concurrent logins (optional)
+                )
+
+                // CSRF default is enabled (recommended for browser sessions)
+                .csrf(Customizer.withDefaults())
+
+                .authenticationProvider(daoAuthenticationProvider());
+
+        return http.build();
+    }
+}

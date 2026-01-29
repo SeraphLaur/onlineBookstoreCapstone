@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Your Cart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold">Your Cart</h1>
+        <a href="/books" class="text-blue-600 hover:underline">Back to Books</a>
+    </div>
+
+    <div id="status" class="text-gray-600 mb-3">Loading cart...</div>
+
+    <div class="overflow-x-auto bg-white shadow-sm ring-1 ring-gray-200 rounded">
+        <table class="min-w-full">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="text-left px-4 py-2 border-b">Title</th>
+                <th class="text-left px-4 py-2 border-b">Price</th>
+                <th class="text-left px-4 py-2 border-b">Qty</th>
+                <th class="text-left px-4 py-2 border-b">Line Total</th>
+                <th class="text-left px-4 py-2 border-b">Action</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+            <tr>
+                <td class="px-4 py-3 border-t font-semibold" colspan="3">Subtotal</td>
+                <td class="px-4 py-3 border-t font-semibold" id="subtotal">₱0.00</td>
+                <td class="px-4 py-3 border-t text-right">
+                    <button id="clearBtn" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                        Clear Cart
+                    </button>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- CSRF for AJAX -->
+<input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}"/>
+<input type="hidden" id="csrfToken"  th:value="${_csrf.token}"/>
+
+<script>
+    const statusEl   = document.getElementById('status');
+    const tbody      = document.getElementById('tbody');
+    const subtotalEl = document.getElementById('subtotal');
+    const clearBtn   = document.getElementById('clearBtn');
+    const csrfHeader = document.getElementById('csrfHeader').value;
+    const csrfToken  = document.getElementById('csrfToken').value;
+
+    function formatMoney(v) {
+        const n = Number(v ?? 0);
+        return n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function loadCart() {
+        try {
+            const res = await fetch('/api/cart', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const cart = await res.json();
+            renderCart(cart);
+            statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+        } catch (e) {
+            console.error(e);
+            statusEl.className = 'text-red-600 mb-3';
+            statusEl.textContent = 'Failed to load cart.';
+            tbody.innerHTML = `<tr><td class="px-4 py-4 text-red-600" colspan="5">${e.message}</td></tr>`;
+        }
+    }
+
+    function renderCart(cart) {
+        tbody.innerHTML = '';
+        if (!cart.lines || cart.lines.length === 0) {
+            tbody.innerHTML = `<tr><td class="px-4 py-6 text-gray-500" colspan="5">Your cart is empty.</td></tr>`;
+            subtotalEl.textContent = '₱0.00';
+            return;
+        }
+
+        cart.lines.forEach(line => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50';
+            tr.innerHTML = `
+        <td class="px-4 py-2 border-b">${line.title}</td>
+        <td class="px-4 py-2 border-b">₱${formatMoney(line.price)}</td>
+        <td class="px-4 py-2 border-b">
+          <div class="flex items-center gap-2">
+            <button class="qty-dec bg-gray-200 px-2 rounded" data-id="${line.bookId}">-</button>
+            <input class="qty-input w-16 border rounded p-1 text-center" data-id="${line.bookId}" value="${line.quantity}" />
+            <button class="qty-inc bg-gray-200 px-2 rounded" data-id="${line.bookId}">+</button>
+          </div>
+        </td>
+        <td class="px-4 py-2 border-b">₱${formatMoney(line.lineTotal)}</td>
+        <td class="px-4 py-2 border-b">
+          <button class="remove-btn bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700" data-id="${line.bookId}">
+            Remove
+          </button>
+        </td>
+      `;
+            tbody.appendChild(tr);
+        });
+
+        subtotalEl.textContent = `₱${formatMoney(cart.subtotal)}`;
+
+        // wire actions
+        tbody.querySelectorAll('.qty-dec').forEach(b => b.addEventListener('click', () => bumpQty(b.dataset.id, -1)));
+        tbody.querySelectorAll('.qty-inc').forEach(b => b.addEventListener('click', () => bumpQty(b.dataset.id, +1)));
+        tbody.querySelectorAll('.qty-input').forEach(inp => inp.addEventListener('change', () => setQty(inp.dataset.id, inp.value)));
+        tbody.querySelectorAll('.remove-btn').forEach(b => b.addEventListener('click', () => removeItem(b.dataset.id)));
+    }
+
+    async function setQty(bookId, val) {
+        const qty = Math.max(0, parseInt(val || '0', 10));
+        await callJson('/api/cart/items/quantity', 'PATCH', { bookId: Number(bookId), qty });
+    }
+
+    async function bumpQty(bookId, delta) {
+        const inp = tbody.querySelector(`.qty-input[data-id="${bookId}"]`);
+        const next = Math.max(0, parseInt(inp.value || '0', 10) + delta);
+        await setQty(bookId, next);
+    }
+
+    async function removeItem(bookId) {
+        await callNoBody(`/api/cart/items/${bookId}`, 'DELETE');
+    }
+
+    async function clearCart() {
+        if (!confirm('Clear all items?')) return;
+        await callNoBody('/api/cart', 'DELETE');
+    }
+
+    async function callJson(url, method, body) {
+        const res = await fetch(url, {
+            method,
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+        const cart = await res.json();
+        renderCart(cart);
+        statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+    }
+
+    async function callNoBody(url, method) {
+        const res = await fetch(url, {
+            method,
+            credentials: 'same-origin',
+            headers: { [csrfHeader]: csrfToken }
+        });
+        if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+        const cart = await res.json();
+        renderCart(cart);
+        statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+    }
+
+    clearBtn.addEventListener('click', clearCart);
+    loadCart();
+</script>
+</body>
+</html>

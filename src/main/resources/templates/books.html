@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Books</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+<form id="logoutForm" th:action="@{/logout}" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <button type="submit">Logout</button>
+</form>
+<div class="max-w-6xl mx-auto">
+
+    <!-- Header: page title + Cart button with badge -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold">Books</h1>
+
+        <!-- Cart button that navigates to /cart -->
+        <a href="/cart"
+           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded">
+            <span class="material-symbols-outlined" aria-hidden="true">shopping_cart</span>
+            <span>Cart</span>
+            <!-- Live badge -->
+            <span id="cartBadge"
+                  class="ml-1 inline-flex items-center justify-center text-xs font-semibold bg-white/20 rounded-full w-6 h-6">
+        0
+      </span>
+        </a>
+    </div>
+    <!-- Filters: search + category -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+        <div class="flex-1">
+            <label for="searchInput" class="sr-only">Search</label>
+            <input id="searchInput"
+                   type="text"
+                   placeholder="Search by title, author, or ISBN..."
+                   class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div>
+            <label for="categorySelect" class="sr-only">Category</label>
+            <select id="categorySelect"
+                    class="w-full sm:w-64 px-3 py-2 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="ALL">All categories</option>
+                <!-- Options will be injected via JS -->
+            </select>
+        </div>
+
+        <button id="clearFiltersBtn"
+                class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded border">
+            Clear
+        </button>
+    </div>
+
+    <div id="status" class="text-gray-600 mb-3">Loading...</div>
+
+    <div class="overflow-x-auto bg-white shadow-sm ring-1 ring-gray-200 rounded">
+        <table class="min-w-full">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="text-left px-4 py-2 border-b">ID</th>
+                <th class="text-left px-4 py-2 border-b">ISBN</th>
+                <th class="text-left px-4 py-2 border-b">Title</th>
+                <th class="text-left px-4 py-2 border-b">Author</th>
+                <th class="text-left px-4 py-2 border-b">Category</th>
+                <th class="text-left px-4 py-2 border-b">Price</th>
+                <th class="text-left px-4 py-2 border-b">Stock</th>
+                <th class="text-left px-4 py-2 border-b">Action</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CSRF for AJAX -->
+<input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}"/>
+<input type="hidden" id="csrfToken"  th:value="${_csrf.token}"/>
+
+<script>
+    const statusEl      = document.getElementById('status');
+    const tbody         = document.getElementById('tbody');
+    const cartBadge     = document.getElementById('cartBadge');
+    const csrfHeader    = document.getElementById('csrfHeader').value;
+    const csrfToken     = document.getElementById('csrfToken').value;
+
+    // New: filter elements
+    const searchInput   = document.getElementById('searchInput');
+    const categorySelect= document.getElementById('categorySelect');
+    const clearBtn      = document.getElementById('clearFiltersBtn');
+
+    // ---------- Cart badge helpers ----------
+    async function initCartBadge() {
+        try {
+            const res = await fetch('/api/cart', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const cart = await res.json(); // CartSummaryDto
+            updateCartBadge(cart.totalItems ?? 0);
+        } catch {
+            updateCartBadge(0);
+        }
+    }
+
+    function updateCartBadge(count) { cartBadge.textContent = count; }
+
+    // ---------- Categories dropdown ----------
+    async function loadCategories() {
+        try {
+            const res = await fetch('/api/categories', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const cats = await res.json(); // [{id, name}]
+            // Keep "All categories" as first option
+            const options = cats.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+            categorySelect.insertAdjacentHTML('beforeend', options);
+        } catch (e) {
+            console.error('Failed to load categories:', e);
+            // Leave only "All categories" if categories endpoint fails
+        }
+    }
+
+    // ---------- Books table ----------
+    async function loadBooks(q = '', category = '') {
+        try {
+            const params = new URLSearchParams();
+            if (q && q.trim().length > 0) params.set('q', q.trim());
+            if (category && category !== 'ALL') params.set('category', category);
+
+            const url = '/api/books' + (params.toString() ? ('?' + params.toString()) : '');
+            statusEl.textContent = 'Loading...';
+
+            const res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const books = await res.json();
+
+            statusEl.textContent = `Loaded ${books.length} book(s).`;
+            tbody.innerHTML = '';
+
+            books.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+          <td class="px-4 py-2 border-b">${safe(b.id)}</td>
+          <td class="px-4 py-2 border-b">${escapeHtml(b.isbn ?? '')}</td>
+          <td class="px-4 py-2 border-b">${escapeHtml(b.title ?? '')}</td>
+          <td class="px-4 py-2 border-b">${escapeHtml(b.author ?? '')}</td>
+          <td class="px-4 py-2 border-b">${escapeHtml(b.category?.name ?? b.categoryName ?? '')}</td>
+          <td class="px-4 py-2 border-b">${safe(b.price)}</td>
+          <td class="px-4 py-2 border-b">${safe(b.stock)}</td>
+          <td class="px-4 py-2 border-b">
+            <button data-id="${safe(b.id)}" class="add-btn bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                    ${b.stock <= 0 ? 'disabled' : ''}>
+              Add to Cart
+            </button>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            if (books.length === 0) {
+                tbody.innerHTML = `<tr><td class="px-4 py-4 text-gray-500" colspan="8">No books found.</td></tr>`;
+            }
+
+            // Wire up buttons
+            document.querySelectorAll('.add-btn').forEach(btn => {
+                btn.addEventListener('click', () => addToCart(btn.dataset.id, 1, btn));
+            });
+
+        } catch (e) {
+            console.error(e);
+            statusEl.className = 'text-red-600 mb-3';
+            statusEl.textContent = 'Failed to load books.';
+            tbody.innerHTML = `<tr><td class="px-4 py-4 text-red-600" colspan="8">${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    // ---------- Add to cart ----------
+    async function addToCart(bookId, qty = 1, buttonEl) {
+        buttonEl.disabled = true;
+        const oldText = buttonEl.textContent;
+        buttonEl.textContent = 'Adding...';
+
+        try {
+            const res = await fetch('/api/cart/items', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ bookId: Number(bookId), qty: Number(qty) })
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || `HTTP ${res.status}`);
+            }
+
+            const cart = await res.json(); // CartSummaryDto
+            updateCartBadge(cart.totalItems ?? 0);
+
+            buttonEl.textContent = 'Added!';
+            setTimeout(() => { buttonEl.textContent = oldText; buttonEl.disabled = false; }, 800);
+
+        } catch (e) {
+            console.error(e);
+            alert('Add to cart failed: ' + e.message);
+            buttonEl.textContent = oldText;
+            buttonEl.disabled = false;
+        }
+    }
+
+    // ---------- Filters: hook up events ----------
+    function applyFilters() {
+        const q = searchInput.value || '';
+        const category = categorySelect.value || '';
+        loadBooks(q, category);
+    }
+
+    // Debounce to avoid spamming requests while typing
+    function debounce(fn, delay = 300) {
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(null, args), delay);
+        };
+    }
+
+    // Basic XSS-safe helpers when inserting user/DB data as text
+    function escapeHtml(v) {
+        if (v === null || v === undefined) return '';
+        return String(v)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    function safe(v) { return v ?? ''; }
+
+    // Events
+    searchInput.addEventListener('input', debounce(applyFilters, 300));
+    categorySelect.addEventListener('change', applyFilters);
+    clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        searchInput.value = '';
+        categorySelect.value = 'ALL';
+        applyFilters();
+    });
+
+    // Initialize page
+    initCartBadge();
+    loadCategories().finally(() => applyFilters()); // load filters first, then books
+</script>
+
+</body>
+</html>

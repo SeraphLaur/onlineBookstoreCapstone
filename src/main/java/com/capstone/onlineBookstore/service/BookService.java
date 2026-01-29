@@ -1,7 +1,6 @@
 package com.capstone.onlineBookstore.service;
 
 import com.capstone.onlineBookstore.model.Book;
-import com.capstone.onlineBookstore.model.OrderItem;
 import com.capstone.onlineBookstore.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +15,13 @@ public class BookService {
     }
 
     public List<Book> getAll() {
-
         return bookRepository.findAll();
+    }
 
-
+    public List<Book> search(String q, String category) {
+        String qq = (q == null || q.isBlank()) ? null : q.trim();
+        String cc = (category == null || category.isBlank() || "ALL".equalsIgnoreCase(category))
+                ? null : category.trim();
+        return bookRepository.search(qq, cc);
     }
 }

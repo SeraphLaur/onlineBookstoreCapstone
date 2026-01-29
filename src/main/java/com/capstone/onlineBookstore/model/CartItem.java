@@ -12,7 +12,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cart_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_items_cart"))
     private Cart cart;
 
@@ -24,6 +24,19 @@ public class CartItem {
     @Min(1)
     @Column(nullable = false)
     private Integer quantity;
+
+    protected CartItem() { }
+
+
+    public CartItem(Cart cart, Book book, int quantity) {
+        if (cart == null) throw new IllegalArgumentException("Cart cannot be null");
+        if (book == null) throw new IllegalArgumentException("Book cannot be null");
+        if (quantity < 1) throw new IllegalArgumentException("Quantity must be >= 1");
+        this.cart = cart;
+        this.book = book;
+        this.quantity = quantity;
+    }
+
 
     //Getters and setters
 
