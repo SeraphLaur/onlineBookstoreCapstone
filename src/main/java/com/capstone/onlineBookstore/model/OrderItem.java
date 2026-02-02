@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+/**
+ * The type Order item.
+ */
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -33,8 +36,19 @@ public class OrderItem {
     private BigDecimal lineTotal;
 
 
+    /**
+     * Instantiates a new Order item.
+     */
     protected OrderItem() { }
 
+    /**
+     * Instantiates a new Order item.
+     *
+     * @param order     the order
+     * @param book      the book
+     * @param quantity  the quantity
+     * @param unitPrice the unit price
+     */
     public OrderItem(Order order, Book book, Integer quantity, BigDecimal unitPrice) {
         if (order == null) throw new IllegalArgumentException("Orders cannot be null");
         if (book == null) throw new IllegalArgumentException("Book cannot be null");
@@ -46,51 +60,111 @@ public class OrderItem {
         this.lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
-    //Getters and Setters
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
+//Getters and Setters
     public Long getId() {
         return id;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Gets order.
+     *
+     * @return the order
+     */
     public Order getOrder() {
         return order;
     }
 
+    /**
+     * Sets order.
+     *
+     * @param order the order
+     */
     public void setOrder(Order order) {
         this.order = order;
     }
 
+    /**
+     * Gets book.
+     *
+     * @return the book
+     */
     public Book getBook() {
         return book;
     }
 
+    /**
+     * Sets book.
+     *
+     * @param book the book
+     */
     public void setBook(Book book) {
         this.book = book;
     }
 
+    /**
+     * Gets quantity.
+     *
+     * @return the quantity
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets quantity.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Gets unit price.
+     *
+     * @return the unit price
+     */
     public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
+    /**
+     * Sets unit price.
+     *
+     * @param unitPrice the unit price
+     */
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
 
+    /**
+     * Gets line total.
+     *
+     * @return the line total
+     */
     public BigDecimal getLineTotal() {
         return lineTotal;
     }
 
+    /**
+     * Sets line total.
+     *
+     * @param lineTotal the line total
+     */
     public void setLineTotal(BigDecimal lineTotal) {
         this.lineTotal = lineTotal;
     }

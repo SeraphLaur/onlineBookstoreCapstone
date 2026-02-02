@@ -7,9 +7,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * The type App user details.
+ */
 public class AppUserDetails implements UserDetails {
     private final User user;
 
+    /**
+     * Instantiates a new App user details.
+     *
+     * @param user the user
+     */
     public AppUserDetails(User user) { this.user = user; }
 
     @Override
@@ -34,7 +42,24 @@ public class AppUserDetails implements UserDetails {
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public Long getId() { return user.getId(); }
+
+    /**
+     * Gets first name.
+     *
+     * @return the first name
+     */
     public String getFirstName() { return user.getFirstName(); }
+
+    /**
+     * Gets last name.
+     *
+     * @return the last name
+     */
     public String getLastName() { return user.getLastName(); }
 }

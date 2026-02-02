@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * The type Order service.
+ */
 @Service
 public class OrderService {
 
@@ -19,13 +22,44 @@ public class OrderService {
     private final BookRepository bookRepository; // assumes you have this
     private final UserRepository userRepository; // assumes you have this
 
+    /**
+     * The enum Order status.
+     */
     public enum OrderStatus {
-        PENDING, PROCESSING, SHIPPED, COMPLETED, CANCELLED
+        /**
+         * Pending order status.
+         */
+        PENDING,
+        /**
+         * Processing order status.
+         */
+        PROCESSING,
+        /**
+         * Shipped order status.
+         */
+        SHIPPED,
+        /**
+         * Completed order status.
+         */
+        COMPLETED,
+        /**
+         * Cancelled order status.
+         */
+        CANCELLED
     }
 
     private static final EnumSet<OrderStatus> CANCELLABLE_STATUSES =
             EnumSet.of(OrderStatus.PENDING, OrderStatus.PROCESSING);
 
+    /**
+     * Instantiates a new Order service.
+     *
+     * @param orderRepository     the order repository
+     * @param orderItemRepository the order item repository
+     * @param cartRepository      the cart repository
+     * @param bookRepository      the book repository
+     * @param userRepository      the user repository
+     */
     public OrderService(OrderRepository orderRepository,
                         OrderItemRepository orderItemRepository,
                         CartRepository cartRepository,
@@ -38,6 +72,12 @@ public class OrderService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Create order from cart order.
+     *
+     * @param userId the user id
+     * @return the order
+     */
     @Transactional
     public Order createOrderFromCart(Long userId) {
         User user = userRepository.findById(userId)
@@ -94,17 +134,36 @@ public class OrderService {
         return order;
     }
 
+    /**
+     * Gets order.
+     *
+     * @param orderId the order id
+     * @return the order
+     */
     @Transactional(readOnly = true)
     public Order getOrder(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found: " + orderId));
     }
 
+    /**
+     * Gets orders for user.
+     *
+     * @param userId the user id
+     * @return the orders for user
+     */
     @Transactional(readOnly = true)
     public List<Order> getOrdersForUser(Long userId) {
         return orderRepository.findByUser_Id(userId);
     }
 
+    /**
+     * Update status order.
+     *
+     * @param orderId      the order id
+     * @param newStatusRaw the new status raw
+     * @return the order
+     */
     @Transactional
     public Order updateStatus(Long orderId, String newStatusRaw) {
         Order order = getOrder(orderId);
@@ -126,6 +185,12 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    /**
+     * Cancel order.
+     *
+     * @param orderId the order id
+     * @return the order
+     */
     @Transactional
     public Order cancelOrder(Long orderId) {
         Order order = getOrder(orderId);
@@ -144,6 +209,12 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    /**
+     * Gets order items.
+     *
+     * @param orderId the order id
+     * @return the order items
+     */
     @Transactional(readOnly = true)
     public List<OrderItem> getOrderItems(Long orderId) {
         // ensure order exists

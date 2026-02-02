@@ -3,34 +3,62 @@ package com.capstone.onlineBookstore.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * The type Page controller.
+ */
 @Controller
 public class PageController {
 
-    //landing page for login
+    /**
+     * Login page string.
+     *
+     * @return the string
+     */
+//landing page for login
     @GetMapping("/login")
     public String loginPage() {
         return "login";
     }
 
+    /**
+     * Register page string.
+     *
+     * @return the string
+     */
     @GetMapping
     public String registerPage() {
         return "register";
     }
 
-    //landing page for books
+    /**
+     * Books page string.
+     *
+     * @return the string
+     */
+//landing page for books
     @GetMapping("/books")
     public String booksPage() {
 
         return "books";
     }
 
-    //landing page for carts
+    /**
+     * Cart page string.
+     *
+     * @return the string
+     */
+//landing page for carts
     @GetMapping("/cart")
     public String cartPage() {
         return "cart"; // resolves src/main/resources/templates/cart.html
     }
 
-    //landing page for orders
+    /**
+     * Orders page string.
+     *
+     * @return the string
+     */
+//landing page for orders
     @GetMapping("/orders")
     public String ordersPage() {
 

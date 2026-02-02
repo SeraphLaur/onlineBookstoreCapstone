@@ -11,12 +11,21 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * The type Security config.
+ */
 @Configuration
 public class SecurityConfig {
 
     private final AppUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Instantiates a new Security config.
+     *
+     * @param userDetailsService the user details service
+     * @param passwordEncoder    the password encoder
+     */
     public SecurityConfig(AppUserDetailsService userDetailsService,
                           PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
@@ -24,6 +33,11 @@ public class SecurityConfig {
     }
 
 
+    /**
+     * Dao authentication provider dao authentication provider.
+     *
+     * @return the dao authentication provider
+     */
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider =
@@ -33,6 +47,13 @@ public class SecurityConfig {
     }
 
 
+    /**
+     * Filter chain security filter chain.
+     *
+     * @param http the http
+     * @return the security filter chain
+     * @throws Exception the exception
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

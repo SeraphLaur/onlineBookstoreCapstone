@@ -1,0 +1,8 @@
+com.capstone.onlineBookstore
+com.capstone.onlineBookstore.config
+com.capstone.onlineBookstore.controller
+com.capstone.onlineBookstore.dto
+com.capstone.onlineBookstore.model
+com.capstone.onlineBookstore.repository
+com.capstone.onlineBookstore.security
+com.capstone.onlineBookstore.service

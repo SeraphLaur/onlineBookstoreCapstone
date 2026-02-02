@@ -7,9 +7,18 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The type Cart mapper.
+ */
 public final class CartMapper {
     private CartMapper() {}
 
+    /**
+     * To dto cart summary dto.
+     *
+     * @param cart the cart
+     * @return the cart summary dto
+     */
     public static CartSummaryDto toDto(Cart cart) {
         // Map lines
         List<CartLineDto> lines = cart.getCartItems().stream()

@@ -11,6 +11,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+/**
+ * The type Cart service.
+ */
 @Service
 public class CartService {
 
@@ -19,13 +22,26 @@ public class CartService {
     private final BookRepository bookRepository;
 
 
+    /**
+     * Instantiates a new Cart service.
+     *
+     * @param cartRepository the cart repository
+     * @param userRepository the user repository
+     * @param bookRepository the book repository
+     */
     public CartService(CartRepository cartRepository, UserRepository userRepository, BookRepository bookRepository) {
         this.cartRepository = cartRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
     }
 
-    //get or create a cart record if there are no records found
+    /**
+     * Get or create cart by user id cart.
+     *
+     * @param userId the user id
+     * @return the cart
+     */
+//get or create a cart record if there are no records found
     @Transactional
     public Cart getOrCreateCartByUserId(Long userId){
         return cartRepository.findByUser_Id(userId)
@@ -39,7 +55,15 @@ public class CartService {
 
     }
 
-    //add item to the cart(create a cart if the user hasnt one yet
+    /**
+     * Add item to cart.
+     *
+     * @param userId the user id
+     * @param bookId the book id
+     * @param qty    the qty
+     * @return the cart
+     */
+//add item to the cart(create a cart if the user hasnt one yet
     @Transactional
     public Cart addItemToCart(Long userId, Long bookId, int qty){
         if(qty <= 0){
@@ -54,7 +78,15 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    //set custom quantity for an item
+    /**
+     * Set item quantity.
+     *
+     * @param userId the user id
+     * @param bookId the book id
+     * @param qty    the qty
+     * @return the cart
+     */
+//set custom quantity for an item
     @Transactional
     public Cart setItemQuantity(Long userId,Long bookId, int qty){
         Cart cart= cartRepository.findByUser_Id(userId)
@@ -71,7 +103,14 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    //delete specific item in the cart
+    /**
+     * Remove item from cart.
+     *
+     * @param userId the user id
+     * @param bookId the book id
+     * @return the cart
+     */
+//delete specific item in the cart
     @Transactional
     public Cart removeItemFromCart(Long userId, Long bookId){
         Cart cart = cartRepository.findByUser_Id(userId)
@@ -82,7 +121,13 @@ public class CartService {
 
     }
 
-    //clear all items in the cart
+    /**
+     * Clear cart.
+     *
+     * @param userId the user id
+     * @return the cart
+     */
+//clear all items in the cart
     @Transactional
     public Cart clearCart(Long userId){
         Cart cart = cartRepository.findByUser_Id(userId)

@@ -9,16 +9,31 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * The type Book controller.
+ */
 @RestController
 @RequestMapping("/api/books")
 class BookController {
 
     private final BookService bookService;
 
+    /**
+     * Instantiates a new Book controller.
+     *
+     * @param bookService the book service
+     */
     public BookController(BookService bookService) {
         this.bookService = bookService;
     }
 
+    /**
+     * Gets books.
+     *
+     * @param q        the q
+     * @param category the category
+     * @return the books
+     */
     @GetMapping
     public List<Book> getBooks(
             @RequestParam(value = "q", required = false) String q,

@@ -14,19 +14,40 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
+/**
+ * The type Order controller.
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
 
-    public static class UpdateOrderStatusRequest { public String status; }
+    /**
+     * The type Update order status request.
+     */
+    public static class UpdateOrderStatusRequest {
+        /**
+         * The Status.
+         */
+        public String status; }
 
+    /**
+     * Instantiates a new Order controller.
+     *
+     * @param orderService the order service
+     */
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 
-    // create an order from  cart
+    /**
+     * Create from cart response entity.
+     *
+     * @param userId the user id
+     * @return the response entity
+     */
+// create an order from  cart
     @PostMapping
     public ResponseEntity<OrderDto> createFromCart(@AuthenticationPrincipal(expression = "id") Long userId) {
         Order order = orderService.createOrderFromCart(userId);
@@ -34,7 +55,13 @@ public class OrderController {
         return ResponseEntity.ok(toDto(order, items));
     }
 
-    // list ALL the current orders for users
+    /**
+     * My orders list.
+     *
+     * @param userId the user id
+     * @return the list
+     */
+// list ALL the current orders for users
     @GetMapping("/me")
     public List<OrderDto> myOrders(@AuthenticationPrincipal(expression = "id") Long userId) {
         return orderService.getOrdersForUser(userId)
@@ -43,7 +70,14 @@ public class OrderController {
                 .collect(toList());
     }
 
-    // get a specific order by id
+    /**
+     * Get order dto.
+     *
+     * @param id     the id
+     * @param userId the user id
+     * @return the order dto
+     */
+// get a specific order by id
     @GetMapping("/{id}")
     public OrderDto get(@PathVariable Long id,
                         @AuthenticationPrincipal(expression = "id") Long userId) {
@@ -51,7 +85,14 @@ public class OrderController {
         return toDto(o, orderService.getOrderItems(id));
     }
 
-    // get the associated items for the specific order
+    /**
+     * Items list.
+     *
+     * @param id     the id
+     * @param userId the user id
+     * @return the list
+     */
+// get the associated items for the specific order
     @GetMapping("/{id}/items")
     public List<OrderItemDto> items(@PathVariable Long id,
                                     @AuthenticationPrincipal(expression = "id") Long userId) {
@@ -67,7 +108,14 @@ public class OrderController {
 //        return toDto(updated, orderService.getOrderItems(id));
 //    }
 
-    // for cancelling orders
+    /**
+     * Cancel order dto.
+     *
+     * @param id     the id
+     * @param userId the user id
+     * @return the order dto
+     */
+// for cancelling orders
     @PostMapping("/{id}/cancel")
     public OrderDto cancel(@PathVariable Long id,
                            @AuthenticationPrincipal(expression = "id") Long userId) {
@@ -98,6 +146,12 @@ public class OrderController {
         return d;
     }
 
+    /**
+     * Handle bad requests response entity.
+     *
+     * @param ex the ex
+     * @return the response entity
+     */
     @ExceptionHandler({EntityNotFoundException.class, IllegalStateException.class, IllegalArgumentException.class})
     public ResponseEntity<String> handleBadRequests(RuntimeException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());

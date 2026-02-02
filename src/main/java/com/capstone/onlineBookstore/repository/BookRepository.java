@@ -9,14 +9,57 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The interface Book repository.
+ */
 public interface BookRepository extends JpaRepository<Book, Long> {
+    /**
+     * Exists by author boolean.
+     *
+     * @param author the author
+     * @return the boolean
+     */
     boolean existsByAuthor(String author);
 
+    /**
+     * Find by category name optional.
+     *
+     * @param categoryName the category name
+     * @return the optional
+     */
     Optional<Book> findByCategory_Name(String categoryName);
+
+    /**
+     * Find by isbn ignore case optional.
+     *
+     * @param isbn the isbn
+     * @return the optional
+     */
     Optional<Book> findByIsbnIgnoreCase(String isbn);
+
+    /**
+     * Find by title containing ignore case optional.
+     *
+     * @param title the title
+     * @return the optional
+     */
     Optional<Book> findByTitleContainingIgnoreCase(String title);
+
+    /**
+     * Find by author containing ignore case optional.
+     *
+     * @param author the author
+     * @return the optional
+     */
     Optional<Book> findByAuthorContainingIgnoreCase(String author);
 
+    /**
+     * Search list.
+     *
+     * @param q        the q
+     * @param category the category
+     * @return the list
+     */
     @Query("""
            select b
            from Book b

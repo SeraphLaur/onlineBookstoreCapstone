@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * The type Cart item.
+ */
 @Entity
 @Table(name = "cart_items")
 public class CartItem {
@@ -25,9 +28,19 @@ public class CartItem {
     @Column(nullable = false)
     private Integer quantity;
 
+    /**
+     * Instantiates a new Cart item.
+     */
     protected CartItem() { }
 
 
+    /**
+     * Instantiates a new Cart item.
+     *
+     * @param cart     the cart
+     * @param book     the book
+     * @param quantity the quantity
+     */
     public CartItem(Cart cart, Book book, int quantity) {
         if (cart == null) throw new IllegalArgumentException("Cart cannot be null");
         if (book == null) throw new IllegalArgumentException("Book cannot be null");
@@ -40,34 +53,74 @@ public class CartItem {
 
     //Getters and setters
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Gets cart.
+     *
+     * @return the cart
+     */
     public Cart getCart() {
         return cart;
     }
 
+    /**
+     * Sets cart.
+     *
+     * @param cart the cart
+     */
     public void setCart(Cart cart) {
         this.cart = cart;
     }
 
+    /**
+     * Gets book.
+     *
+     * @return the book
+     */
     public Book getBook() {
         return book;
     }
 
+    /**
+     * Sets book.
+     *
+     * @param book the book
+     */
     public void setBook(Book book) {
         this.book = book;
     }
 
+    /**
+     * Gets quantity.
+     *
+     * @return the quantity
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets quantity.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }

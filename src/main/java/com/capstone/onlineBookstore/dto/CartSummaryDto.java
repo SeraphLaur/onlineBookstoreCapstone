@@ -3,6 +3,9 @@ package com.capstone.onlineBookstore.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * The type Cart summary dto.
+ */
 public record CartSummaryDto(
         Long cartId,
         Long userId,
