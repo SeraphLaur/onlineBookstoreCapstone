@@ -26,7 +26,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // POST /api/orders -> create order from current user's cart
+    // create an order from  cart
     @PostMapping
     public ResponseEntity<OrderDto> createFromCart(@AuthenticationPrincipal(expression = "id") Long userId) {
         Order order = orderService.createOrderFromCart(userId);
@@ -34,7 +34,7 @@ public class OrderController {
         return ResponseEntity.ok(toDto(order, items));
     }
 
-    // GET /api/orders/me -> list current user's orders
+    // list ALL the current orders for users
     @GetMapping("/me")
     public List<OrderDto> myOrders(@AuthenticationPrincipal(expression = "id") Long userId) {
         return orderService.getOrdersForUser(userId)
@@ -43,43 +43,40 @@ public class OrderController {
                 .collect(toList());
     }
 
-    // GET /api/orders/{id} -> (optionally ensure it belongs to current user)
+    // get a specific order by id
     @GetMapping("/{id}")
     public OrderDto get(@PathVariable Long id,
                         @AuthenticationPrincipal(expression = "id") Long userId) {
         Order o = orderService.getOrder(id);
-        // Optional: enforce ownership check here if not admin
-        // if (!o.getUser().getId().equals(userId)) throw new AccessDeniedException("Forbidden");
         return toDto(o, orderService.getOrderItems(id));
     }
 
-    // GET /api/orders/{id}/items
+    // get the associated items for the specific order
     @GetMapping("/{id}/items")
     public List<OrderItemDto> items(@PathVariable Long id,
                                     @AuthenticationPrincipal(expression = "id") Long userId) {
-        // Optional: ensure ownership
         orderService.getOrder(id);
         return orderService.getOrderItems(id).stream().map(this::toItemDto).collect(toList());
     }
 
-    // PATCH /api/orders/{id}/status  (admin-only ideally)
-    @PatchMapping("/{id}/status")
-    public OrderDto updateStatus(@PathVariable Long id,
-                                 @RequestBody UpdateOrderStatusRequest req) {
-        Order updated = orderService.updateStatus(id, req.status);
-        return toDto(updated, orderService.getOrderItems(id));
-    }
+    //for updating status but this is for admin
+//    @PatchMapping("/{id}/status")
+//    public OrderDto updateStatus(@PathVariable Long id,
+//                                 @RequestBody UpdateOrderStatusRequest req) {
+//        Order updated = orderService.updateStatus(id, req.status);
+//        return toDto(updated, orderService.getOrderItems(id));
+//    }
 
-    // POST /api/orders/{id}/cancel
+    // for cancelling orders
     @PostMapping("/{id}/cancel")
     public OrderDto cancel(@PathVariable Long id,
                            @AuthenticationPrincipal(expression = "id") Long userId) {
-        // Optional: ensure ownership
+
         Order cancelled = orderService.cancelOrder(id);
         return toDto(cancelled, orderService.getOrderItems(id));
     }
 
-    // ---- DTO mapping ----
+    // mapping of dto
     private OrderDto toDto(Order o, List<OrderItem> items) {
         OrderDto d = new OrderDto();
         d.id = o.getId();

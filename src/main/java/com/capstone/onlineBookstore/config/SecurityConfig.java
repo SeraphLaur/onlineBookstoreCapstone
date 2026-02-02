@@ -43,12 +43,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Form login (Spring Security default login page for quick start)
+                // Form login
                 .formLogin(form -> form
-                        .loginPage("/login")            // Your custom login page endpoint (GET)
-                        .loginProcessingUrl("/login")   // POST target for credentials
-                        .usernameParameter("email")     // match form field name
-                        .passwordParameter("password")  // match form field name
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
                         .defaultSuccessUrl("/books", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
@@ -69,7 +69,7 @@ public class SecurityConfig {
                         .maximumSessions(1)   // prevent concurrent logins (optional)
                 )
 
-                // CSRF default is enabled (recommended for browser sessions)
+                // CSRF default is enabled
                 .csrf(Customizer.withDefaults())
 
                 .authenticationProvider(daoAuthenticationProvider());

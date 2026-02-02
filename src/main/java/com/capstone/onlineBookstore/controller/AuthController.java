@@ -20,21 +20,8 @@ public class AuthController {
     @PostMapping(value = "/register", consumes = "application/x-www-form-urlencoded")
     public ModelAndView registerFromForm(@Valid RegisterRequest req) {
         User created = registrationService.register(req);
-        // On success, redirect to login with a flash-style query param
         return new ModelAndView("redirect:/login?registered=" + created.getEmail());
     }
-
-    @GetMapping("/login")
-    public ModelAndView loginPage() {
-        return new ModelAndView("login"); // renders the view instead of writing "login"
-    }
-
-    @GetMapping("/register")
-    public ModelAndView registerPage() {
-        return new ModelAndView("register");
-    }
-
-
 
 
     @PostMapping("/register")

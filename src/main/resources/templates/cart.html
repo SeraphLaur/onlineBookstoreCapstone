@@ -485,7 +485,7 @@
         const currentQty = parseInt(inp.value || '0', 10);
         let next = Math.max(0, currentQty + delta);
 
-        // Check if trying to increase beyond stock
+        // check if trying to increase beyond stock
         if (delta > 0 && maxStock !== undefined && next > maxStock) {
             showToast(`Cannot add more. Only ${maxStock} available in stock.`, 'warning');
             return;
@@ -506,7 +506,7 @@
         }
     }
 
-    // ========== Clear Cart ==========
+    //clear cart
     async function clearCart() {
         const confirmed = confirm('Clear all items from cart?\n\nThis action cannot be undone.');
         if (!confirmed) return;
@@ -519,7 +519,7 @@
         }
     }
 
-    // ========== Place Order ==========
+    // place order
     async function placeOrder() {
         if (emptyState.classList.contains('hidden') === false) {
             showToast('Your cart is empty. Add items before placing an order.', 'warning');
