@@ -76,10 +76,8 @@ public class CartService {
     public Cart removeItemFromCart(Long userId, Long bookId){
         Cart cart = cartRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found " + userId));
-        boolean removed = cart.removeItem(bookId);
-        if (!removed){
-            throw new EntityNotFoundException("Item not found " + bookId);
-        }
+        cart.removeItem(bookId);
+
         return cartRepository.save(cart);
 
     }

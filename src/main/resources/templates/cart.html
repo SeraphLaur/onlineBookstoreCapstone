@@ -2,138 +2,566 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>Your Cart</title>
+    <title>Your Cart - Modern Bookstore</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast-enter { animation: slideInLeft 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast-exit { animation: slideOutLeft 0.3s ease-in; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+
+        .cart-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(to bottom, #ffffff, #fafafa);
+        }
+
+        .cart-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Number input styling */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
-<div class="max-w-5xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold">Your Cart</h1>
-        <a href="/books" class="text-blue-600 hover:underline">Back to Books</a>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+
+<!-- Toast Notification Container - Bottom Left -->
+<div id="toastContainer" class="fixed bottom-6 left-6 z-50 space-y-3 max-w-sm"></div>
+
+<!-- Header -->
+<header class="glass-effect border-b border-white/20 sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-5">
+        <div class="flex items-center justify-between">
+            <!-- Logo & Back Button -->
+            <div class="flex items-center gap-4">
+                <a href="/books" class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/80 hover:bg-white text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Shopping Cart</h1>
+                    <p class="text-xs text-slate-500">Review and checkout your items</p>
+                </div>
+            </div>
+
+            <!-- View Orders Button -->
+            <a href="/orders"
+               class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span class="hidden sm:inline">View Orders</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Status Message -->
+    <div id="status" class="text-slate-600 mb-6 text-sm font-semibold flex items-center gap-2">
+        <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+        <span></span>
     </div>
 
-    <div id="status" class="text-gray-600 mb-3">Loading cart...</div>
+    <div class="grid lg:grid-cols-3 gap-6">
 
-    <div class="overflow-x-auto bg-white shadow-sm ring-1 ring-gray-200 rounded">
-        <table class="min-w-full">
-            <thead class="bg-gray-100">
-            <tr>
-                <th class="text-left px-4 py-2 border-b">Title</th>
-                <th class="text-left px-4 py-2 border-b">Price</th>
-                <th class="text-left px-4 py-2 border-b">Qty</th>
-                <th class="text-left px-4 py-2 border-b">Line Total</th>
-                <th class="text-left px-4 py-2 border-b">Action</th>
-            </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-            <tfoot>
-            <tr>
-                <td class="px-4 py-3 border-t font-semibold" colspan="3">Subtotal</td>
-                <td class="px-4 py-3 border-t font-semibold" id="subtotal">₱0.00</td>
-                <td class="px-4 py-3 border-t text-right">
-                    <button id="clearBtn" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+        <!-- Cart Items Section -->
+        <div class="lg:col-span-2 space-y-4">
+            <div id="cartItems">
+                <!-- Cart items will be injected here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20 fade-in">
+                <div class="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-6">
+                    <svg class="w-16 h-16 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-slate-900 mb-3">Your cart is empty</h3>
+                <p class="text-slate-500 text-lg mb-8">Add some books to get started</p>
+                <a href="/books" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    Browse Books
+                </a>
+            </div>
+        </div>
+
+        <!-- Order Summary Section -->
+        <div class="lg:col-span-1">
+            <div class="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 sticky top-24">
+                <h2 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    Order Summary
+                </h2>
+
+                <div class="space-y-4 mb-6 pb-6 border-b border-slate-200">
+                    <div class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
+                        <span class="text-sm font-medium text-slate-700">Total Items</span>
+                        <span id="itemCount" class="font-bold text-indigo-600 text-lg">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg">
+                        <span class="text-sm font-medium text-slate-700">Distinct Items</span>
+                        <span id="distinctCount" class="font-bold text-blue-600 text-lg">0</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-6 bg-gradient-to-r from-slate-100 to-slate-200 p-4 rounded-xl">
+                    <span class="text-lg font-semibold text-slate-900">Subtotal</span>
+                    <span id="subtotal" class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">₱0.00</span>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="placeOrderBtn"
+                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed text-white px-6 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none">
+                        Place Order
+                    </button>
+
+                    <button id="clearBtn"
+                            class="w-full bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 text-red-600 px-6 py-3 rounded-xl font-semibold transition-all border-2 border-red-200 hover:border-red-300">
                         Clear Cart
                     </button>
-                </td>
-            </tr>
-            </tfoot>
-        </table>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-slate-200">
+                    <div class="flex items-start gap-2 text-xs text-slate-500 bg-blue-50 p-3 rounded-lg">
+                        <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Your cart will be cleared after placing an order</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</main>
 
 <!-- CSRF for AJAX -->
 <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}"/>
 <input type="hidden" id="csrfToken"  th:value="${_csrf.token}"/>
 
 <script>
-    const statusEl   = document.getElementById('status');
-    const tbody      = document.getElementById('tbody');
+    const statusEl = document.getElementById('status');
+    const cartItems = document.getElementById('cartItems');
+    const emptyState = document.getElementById('emptyState');
     const subtotalEl = document.getElementById('subtotal');
-    const clearBtn   = document.getElementById('clearBtn');
+    const itemCountEl = document.getElementById('itemCount');
+    const distinctCountEl = document.getElementById('distinctCount');
+    const clearBtn = document.getElementById('clearBtn');
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
     const csrfHeader = document.getElementById('csrfHeader').value;
-    const csrfToken  = document.getElementById('csrfToken').value;
+    const csrfToken = document.getElementById('csrfToken').value;
 
+    // Store book stocks for validation
+    let bookStocks = {};
+
+    // ========== Toast Notifications (Bottom Left) ==========
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+
+        const icons = {
+            success: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+            error: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`,
+            warning: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`,
+            info: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>`
+        };
+
+        const styles = {
+            success: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white',
+            error: 'bg-gradient-to-r from-red-500 to-rose-600 text-white',
+            warning: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white',
+            info: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `${styles[type]} rounded-xl p-4 shadow-2xl toast-enter flex items-center gap-3 min-w-[300px] border border-white/20`;
+
+        toast.innerHTML = `
+            <div class="flex-shrink-0">${icons[type]}</div>
+            <p class="flex-1 font-medium text-sm leading-relaxed">${escapeHtml(message)}</p>
+            <button onclick="this.parentElement.remove()" class="flex-shrink-0 hover:bg-white/20 rounded-lg p-1 transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(toast);
+
+        if (duration > 0) {
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+    }
+
+    // ========== Utilities ==========
     function formatMoney(v) {
         const n = Number(v ?? 0);
         return n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function escapeHtml(v) {
+        if (v === null || v === undefined) return '';
+        return String(v)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // ========== Load Cart ==========
     async function loadCart() {
         try {
+            statusEl.querySelector('span').textContent = 'Loading cart...';
+            cartItems.innerHTML = '';
+            emptyState.classList.add('hidden');
+
             const res = await fetch('/api/cart', { credentials: 'same-origin' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const cart = await res.json();
+
+            // Fetch book details to get stock information
+            await fetchBookStocks(cart);
+
             renderCart(cart);
-            statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+            updateSummary(cart);
+            statusEl.querySelector('span').textContent = `Cart loaded successfully`;
         } catch (e) {
             console.error(e);
-            statusEl.className = 'text-red-600 mb-3';
-            statusEl.textContent = 'Failed to load cart.';
-            tbody.innerHTML = `<tr><td class="px-4 py-4 text-red-600" colspan="5">${e.message}</td></tr>`;
+            statusEl.className = 'text-red-600 mb-6 text-sm font-semibold flex items-center gap-2';
+            statusEl.querySelector('span').textContent = 'Failed to load cart.';
+            showToast('Failed to load cart: ' + e.message, 'error');
         }
     }
 
+    // ========== Fetch Book Stocks ==========
+    async function fetchBookStocks(cart) {
+        if (!cart.lines || cart.lines.length === 0) return;
+
+        // Fetch all books to get their stock levels
+        try {
+            const res = await fetch('/api/books', { credentials: 'same-origin' });
+            if (!res.ok) return;
+            const books = await res.json();
+
+            // Create a map of bookId to stock
+            bookStocks = {};
+            books.forEach(book => {
+                bookStocks[book.id] = book.stock || 0;
+            });
+        } catch (e) {
+            console.error('Failed to fetch book stocks:', e);
+        }
+    }
+
+    // ========== Render Cart ==========
     function renderCart(cart) {
-        tbody.innerHTML = '';
+        cartItems.innerHTML = '';
+
         if (!cart.lines || cart.lines.length === 0) {
-            tbody.innerHTML = `<tr><td class="px-4 py-6 text-gray-500" colspan="5">Your cart is empty.</td></tr>`;
-            subtotalEl.textContent = '₱0.00';
+            emptyState.classList.remove('hidden');
             return;
         }
 
-        cart.lines.forEach(line => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-gray-50';
-            tr.innerHTML = `
-        <td class="px-4 py-2 border-b">${line.title}</td>
-        <td class="px-4 py-2 border-b">₱${formatMoney(line.price)}</td>
-        <td class="px-4 py-2 border-b">
-          <div class="flex items-center gap-2">
-            <button class="qty-dec bg-gray-200 px-2 rounded" data-id="${line.bookId}">-</button>
-            <input class="qty-input w-16 border rounded p-1 text-center" data-id="${line.bookId}" value="${line.quantity}" />
-            <button class="qty-inc bg-gray-200 px-2 rounded" data-id="${line.bookId}">+</button>
-          </div>
-        </td>
-        <td class="px-4 py-2 border-b">₱${formatMoney(line.lineTotal)}</td>
-        <td class="px-4 py-2 border-b">
-          <button class="remove-btn bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700" data-id="${line.bookId}">
-            Remove
-          </button>
-        </td>
-      `;
-            tbody.appendChild(tr);
+        cart.lines.forEach((line, idx) => {
+            const card = document.createElement('div');
+            card.className = 'cart-item rounded-2xl shadow-xl border border-slate-200 p-6 fade-in';
+            card.style.animationDelay = `${idx * 0.1}s`;
+
+            const availableStock = bookStocks[line.bookId] || 0;
+            const atMaxStock = line.quantity >= availableStock;
+
+            card.innerHTML = `
+                <div class="flex flex-col md:flex-row items-start gap-6">
+                    <!-- Book Info -->
+                    <div class="flex-1 w-full">
+                        <div class="flex items-start gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-slate-900 mb-2">${escapeHtml(line.title)}</h3>
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <p class="text-slate-600 text-sm font-medium">Price: ₱${formatMoney(line.price)}</p>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${availableStock > 0 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'} shadow-lg">
+                                        ${availableStock > 0 ? `${availableStock} in stock` : 'Out of stock'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantity Controls -->
+                        <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold text-slate-700">Quantity:</span>
+                                <div class="flex items-center border-2 border-slate-300 rounded-xl overflow-hidden shadow-md">
+                                    <button class="qty-dec bg-white hover:bg-slate-100 px-4 py-3 text-slate-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            data-id="${line.bookId}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"/>
+                                        </svg>
+                                    </button>
+                                    <input type="number"
+                                           class="qty-input w-20 text-center border-x-2 border-slate-300 py-3 focus:outline-none focus:bg-indigo-50 font-bold text-slate-900"
+                                           data-id="${line.bookId}"
+                                           data-stock="${availableStock}"
+                                           value="${line.quantity}"
+                                           min="0"
+                                           max="${availableStock}" />
+                                    <button class="qty-inc bg-white hover:bg-slate-100 px-4 py-3 text-slate-700 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            data-id="${line.bookId}"
+                                            data-stock="${availableStock}"
+                                            ${atMaxStock ? 'disabled' : ''}>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            ${atMaxStock ? `
+                                <div class="mt-3 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="font-medium">Maximum stock reached</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Line Total & Remove -->
+                    <div class="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-4 w-full md:w-auto">
+                        <div class="text-left md:text-right">
+                            <p class="text-sm text-slate-500 mb-1 font-medium">Line Total</p>
+                            <p class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">₱${formatMoney(line.lineTotal)}</p>
+                        </div>
+
+                        <button class="remove-btn inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 text-red-600 px-5 py-3 rounded-xl font-semibold transition-all border-2 border-red-200 hover:border-red-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                                data-id="${line.bookId}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            cartItems.appendChild(card);
         });
 
+        // Wire up event listeners
+        cartItems.querySelectorAll('.qty-dec').forEach(b =>
+            b.addEventListener('click', () => bumpQty(b.dataset.id, -1))
+        );
+        cartItems.querySelectorAll('.qty-inc').forEach(b =>
+            b.addEventListener('click', () => {
+                const stock = parseInt(b.dataset.stock || '0', 10);
+                bumpQty(b.dataset.id, +1, stock);
+            })
+        );
+        cartItems.querySelectorAll('.qty-input').forEach(inp =>
+            inp.addEventListener('change', () => {
+                const stock = parseInt(inp.dataset.stock || '0', 10);
+                setQty(inp.dataset.id, inp.value, stock);
+            })
+        );
+        cartItems.querySelectorAll('.remove-btn').forEach(b =>
+            b.addEventListener('click', () => removeItem(b.dataset.id))
+        );
+    }
+
+    // ========== Update Summary ==========
+    function updateSummary(cart) {
         subtotalEl.textContent = `₱${formatMoney(cart.subtotal)}`;
-
-        // wire actions
-        tbody.querySelectorAll('.qty-dec').forEach(b => b.addEventListener('click', () => bumpQty(b.dataset.id, -1)));
-        tbody.querySelectorAll('.qty-inc').forEach(b => b.addEventListener('click', () => bumpQty(b.dataset.id, +1)));
-        tbody.querySelectorAll('.qty-input').forEach(inp => inp.addEventListener('change', () => setQty(inp.dataset.id, inp.value)));
-        tbody.querySelectorAll('.remove-btn').forEach(b => b.addEventListener('click', () => removeItem(b.dataset.id)));
+        itemCountEl.textContent = cart.totalItems || 0;
+        distinctCountEl.textContent = cart.distinctItems || 0;
     }
 
-    async function setQty(bookId, val) {
-        const qty = Math.max(0, parseInt(val || '0', 10));
-        await callJson('/api/cart/items/quantity', 'PATCH', { bookId: Number(bookId), qty });
+    // ========== Quantity Management ==========
+    async function setQty(bookId, val, maxStock) {
+        let qty = Math.max(0, parseInt(val || '0', 10));
+
+        // Validate against stock
+        if (maxStock !== undefined && qty > maxStock) {
+            showToast(`Cannot exceed available stock (${maxStock} available)`, 'warning');
+            qty = maxStock;
+            // Update the input to reflect the max
+            const inp = cartItems.querySelector(`.qty-input[data-id="${bookId}"]`);
+            if (inp) inp.value = qty;
+        }
+
+        try {
+            await callJson('/api/cart/items/quantity', 'PATCH', { bookId: Number(bookId), qty });
+            showToast('Quantity updated ✓', 'success', 2000);
+        } catch (e) {
+            showToast('Failed to update quantity: ' + e.message, 'error');
+        }
     }
 
-    async function bumpQty(bookId, delta) {
-        const inp = tbody.querySelector(`.qty-input[data-id="${bookId}"]`);
-        const next = Math.max(0, parseInt(inp.value || '0', 10) + delta);
-        await setQty(bookId, next);
+    async function bumpQty(bookId, delta, maxStock) {
+        const inp = cartItems.querySelector(`.qty-input[data-id="${bookId}"]`);
+        const currentQty = parseInt(inp.value || '0', 10);
+        let next = Math.max(0, currentQty + delta);
+
+        // Check if trying to increase beyond stock
+        if (delta > 0 && maxStock !== undefined && next > maxStock) {
+            showToast(`Cannot add more. Only ${maxStock} available in stock.`, 'warning');
+            return;
+        }
+
+        await setQty(bookId, next, maxStock);
     }
 
     async function removeItem(bookId) {
-        await callNoBody(`/api/cart/items/${bookId}`, 'DELETE');
+        const confirmed = confirm('Remove this item from cart?\n\nThis action cannot be undone.');
+        if (!confirmed) return;
+
+        try {
+            await callNoBody(`/api/cart/items/${bookId}`, 'DELETE');
+            showToast('Item removed from cart ✓', 'success');
+        } catch (e) {
+            showToast('Failed to remove item: ' + e.message, 'error');
+        }
     }
 
+    // ========== Clear Cart ==========
     async function clearCart() {
-        if (!confirm('Clear all items?')) return;
-        await callNoBody('/api/cart', 'DELETE');
+        const confirmed = confirm('Clear all items from cart?\n\nThis action cannot be undone.');
+        if (!confirmed) return;
+
+        try {
+            await callNoBody('/api/cart', 'DELETE');
+            showToast('Cart cleared successfully! 🎯', 'success');
+        } catch (e) {
+            showToast('Failed to clear cart: ' + e.message, 'error');
+        }
     }
 
+    // ========== Place Order ==========
+    async function placeOrder() {
+        if (emptyState.classList.contains('hidden') === false) {
+            showToast('Your cart is empty. Add items before placing an order.', 'warning');
+            return;
+        }
+
+        const confirmed = confirm('Place order from your current cart?\n\nYour cart will be cleared after the order is placed.');
+        if (!confirmed) return;
+
+        placeOrderBtn.disabled = true;
+        const oldHTML = placeOrderBtn.innerHTML;
+        placeOrderBtn.innerHTML = `
+            <svg class="animate-spin h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        `;
+
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { [csrfHeader]: csrfToken, 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+            const order = await res.json();
+
+            showToast(`Order #${order.id} placed successfully! Redirecting... 🎉`, 'success');
+
+            setTimeout(() => {
+                window.location.href = '/orders';
+            }, 1500);
+        } catch (e) {
+            console.error(e);
+            showToast('Failed to place order: ' + e.message, 'error');
+            placeOrderBtn.innerHTML = oldHTML;
+            placeOrderBtn.disabled = false;
+        }
+    }
+
+    // ========== API Helpers ==========
     async function callJson(url, method, body) {
         const res = await fetch(url, {
             method,
@@ -143,8 +571,12 @@
         });
         if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
         const cart = await res.json();
+
+        // Refresh stock info
+        await fetchBookStocks(cart);
+
         renderCart(cart);
-        statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+        updateSummary(cart);
     }
 
     async function callNoBody(url, method) {
@@ -155,11 +587,19 @@
         });
         if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
         const cart = await res.json();
+
+        // Refresh stock info
+        await fetchBookStocks(cart);
+
         renderCart(cart);
-        statusEl.textContent = `Items: ${cart.totalItems} (distinct: ${cart.distinctItems})`;
+        updateSummary(cart);
     }
 
+    // ========== Event Listeners ==========
     clearBtn.addEventListener('click', clearCart);
+    placeOrderBtn.addEventListener('click', placeOrder);
+
+    // ========== Initialize ==========
     loadCart();
 </script>
 </body>

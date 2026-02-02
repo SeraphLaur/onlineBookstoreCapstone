@@ -46,8 +46,6 @@ public class AuthController {
     }
 
 
-
-    // Simple DTO for messages
     static class SimpleMessage {
         public String message;
         public SimpleMessage(String m) { this.message = m; }

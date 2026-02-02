@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Your Orders - Modern Bookstore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .toast-enter { animation: slideInLeft 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast-exit { animation: slideOutLeft 0.3s ease-in; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+
+        .order-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(to bottom, #ffffff, #fafafa);
+        }
+
+        .order-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+
+<!-- Toast Notification Container - Bottom Left -->
+<div id="toastContainer" class="fixed bottom-6 left-6 z-50 space-y-3 max-w-sm"></div>
+
+<!-- Header -->
+<header class="glass-effect border-b border-white/20 sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-5">
+        <div class="flex items-center justify-between">
+            <!-- Logo & Back Button -->
+            <div class="flex items-center gap-4">
+                <a href="/books" class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/80 hover:bg-white text-slate-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Your Orders</h1>
+                    <p class="text-xs text-slate-500">Track and manage your purchases</p>
+                </div>
+            </div>
+
+            <!-- Place Order Button -->
+            <button id="placeOrderBtn"
+                    class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span class="hidden sm:inline">Place New Order</span>
+                <span class="sm:hidden">New Order</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Status Message -->
+    <div id="status" class="text-slate-600 mb-6 text-sm font-semibold flex items-center gap-2">
+        <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+        <span></span>
+    </div>
+
+    <!-- Orders Container -->
+    <div id="ordersContainer" class="space-y-6">
+        <!-- Orders will be injected here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-20 fade-in">
+        <div class="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-6">
+            <svg class="w-16 h-16 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+        </div>
+        <h3 class="text-3xl font-bold text-slate-900 mb-3">No orders yet</h3>
+        <p class="text-slate-500 text-lg mb-8">Start shopping to create your first order</p>
+        <a href="/books" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            Browse Books
+        </a>
+    </div>
+</main>
+
+<!-- CSRF for AJAX -->
+<input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}"/>
+<input type="hidden" id="csrfToken"  th:value="${_csrf.token}"/>
+
+<script>
+    const statusEl = document.getElementById('status');
+    const ordersContainer = document.getElementById('ordersContainer');
+    const emptyState = document.getElementById('emptyState');
+    const csrfHeader = document.getElementById('csrfHeader')?.value || 'X-CSRF-TOKEN';
+    const csrfToken = document.getElementById('csrfToken')?.value || '';
+    const placeBtn = document.getElementById('placeOrderBtn');
+
+    const STATUSES = ["PENDING","PROCESSING","SHIPPED","COMPLETED","CANCELLED"];
+
+    // ========== Toast Notifications (Bottom Left) ==========
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+
+        const icons = {
+            success: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>`,
+            error: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>`,
+            info: `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>`
+        };
+
+        const styles = {
+            success: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white',
+            error: 'bg-gradient-to-r from-red-500 to-rose-600 text-white',
+            info: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `${styles[type]} rounded-xl p-4 shadow-2xl toast-enter flex items-center gap-3 min-w-[300px] border border-white/20`;
+
+        toast.innerHTML = `
+            <div class="flex-shrink-0">${icons[type]}</div>
+            <p class="flex-1 font-medium text-sm leading-relaxed">${escapeHtml(message)}</p>
+            <button onclick="this.parentElement.remove()" class="flex-shrink-0 hover:bg-white/20 rounded-lg p-1 transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(toast);
+
+        if (duration > 0) {
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+    }
+
+    // ========== Utilities ==========
+    function formatMoney(v) {
+        const n = Number(v ?? 0);
+        return n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    async function httpJson(url, options = {}) {
+        const res = await fetch(url, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', ...(options.headers || {}) },
+            ...options
+        });
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || `HTTP ${res.status}`);
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+    }
+
+    function escapeHtml(v) {
+        if (v === null || v === undefined) return '';
+        return String(v)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function badgeClass(status) {
+        switch (status) {
+            case 'PENDING':    return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white';
+            case 'PROCESSING': return 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white';
+            case 'SHIPPED':    return 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white';
+            case 'COMPLETED':  return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white';
+            case 'CANCELLED':  return 'bg-gradient-to-r from-red-500 to-rose-500 text-white';
+            default:           return 'bg-gradient-to-r from-slate-400 to-slate-500 text-white';
+        }
+    }
+
+    // ========== Load Orders ==========
+    async function loadOrders() {
+        try {
+            statusEl.querySelector('span').textContent = 'Loading orders...';
+            ordersContainer.innerHTML = '';
+            emptyState.classList.add('hidden');
+
+            const orders = await httpJson(`/api/orders/me`);
+
+            // Console log the orders data in JSON format
+            console.log('Orders data (JSON):', JSON.stringify(orders, null, 2));
+            console.log('Orders object:', orders);
+
+            if (!orders || orders.length === 0) {
+                emptyState.classList.remove('hidden');
+                statusEl.querySelector('span').textContent = 'No orders found.';
+                return;
+            }
+
+            statusEl.querySelector('span').textContent = `Showing ${orders.length} order${orders.length !== 1 ? 's' : ''}`;
+            renderOrders(orders);
+        } catch (e) {
+            console.error(e);
+            statusEl.className = 'text-red-600 mb-6 text-sm font-semibold flex items-center gap-2';
+            statusEl.querySelector('span').textContent = 'Failed to load orders.';
+            showToast('Failed to load orders: ' + e.message, 'error');
+        }
+    }
+
+    // ========== Render Orders ==========
+    function renderOrders(orders) {
+        ordersContainer.innerHTML = '';
+
+        orders.forEach((o, idx) => {
+            const canCancel = ["PENDING","PROCESSING"].includes(o.status);
+
+            const card = document.createElement('div');
+            card.className = 'order-card rounded-2xl shadow-xl border border-slate-200 overflow-hidden fade-in';
+            card.style.animationDelay = `${idx * 0.1}s`;
+
+            card.innerHTML = `
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900">Order #${o.id}</h3>
+                            </div>
+                            <p class="text-sm text-slate-500 ml-13">Placed on ${fmtDate(o.createdAt)}</p>
+                        </div>
+                        <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold shadow-lg ${badgeClass(o.status)}">
+                            ${o.status}
+                        </span>
+                    </div>
+
+                    <!-- Order Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-100">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-medium text-slate-600">Total Amount</p>
+                            </div>
+                            <p class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">₱${formatMoney(o.total)}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-100">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-medium text-slate-600">Last Updated</p>
+                            </div>
+                            <p class="text-lg font-semibold text-slate-700">${fmtDate(o.updatedAt)}</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Toggle -->
+                    <button class="view-items w-full flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 px-5 py-4 rounded-xl transition-all mb-6 border border-slate-200 shadow-sm" data-id="${o.id}">
+                        <span class="font-semibold text-slate-700 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                            View Order Items
+                        </span>
+                        <svg class="w-5 h-5 text-slate-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <!-- Items Container -->
+                    <div id="items-${o.id}" class="hidden mb-6"></div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-wrap gap-3">
+
+                        <button class="cancel-order ${canCancel ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105' : 'bg-slate-300 text-slate-500 cursor-not-allowed'} px-6 py-3 rounded-xl font-semibold transition-all"
+                                data-id="${o.id}" ${canCancel ? '' : 'disabled'}>
+                            ${canCancel ? 'Cancel Order' : 'Cannot Cancel'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            ordersContainer.appendChild(card);
+        });
+
+        // Wire up event listeners
+        document.querySelectorAll('.view-items').forEach(btn => {
+            btn.addEventListener('click', () => toggleItems(btn.dataset.id, btn));
+        });
+        document.querySelectorAll('.refresh-items').forEach(btn => {
+            btn.addEventListener('click', () => loadItems(btn.dataset.id, true));
+        });
+        document.querySelectorAll('.cancel-order').forEach(btn => {
+            btn.addEventListener('click', () => cancelOrder(btn.dataset.id));
+        });
+    }
+
+    // ========== Toggle Items ==========
+    async function toggleItems(orderId, buttonEl) {
+        const container = document.getElementById(`items-${orderId}`);
+        const icon = buttonEl.querySelector('svg:last-child');
+        const isHidden = container.classList.contains('hidden');
+
+        if (isHidden) {
+            await loadItems(orderId, false);
+            container.classList.remove('hidden');
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            container.classList.add('hidden');
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // ========== Load Items ==========
+    async function loadItems(orderId, force) {
+        const container = document.getElementById(`items-${orderId}`);
+        if (!container) return;
+        if (!force && container.innerHTML.trim().length > 0 && !container.classList.contains('hidden')) {
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="flex items-center justify-center py-12 text-slate-500">
+                <svg class="animate-spin h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="font-medium">Loading items...</span>
+            </div>
+        `;
+
+        try {
+            const items = await httpJson(`/api/orders/${orderId}/items`);
+
+            // Console log the items data in JSON format
+            console.log(`Order #${orderId} items (JSON):`, JSON.stringify(items, null, 2));
+            console.log(`Order #${orderId} items object:`, items);
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 bg-slate-50 rounded-xl border border-slate-200">No items for this order.</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-gradient-to-r from-slate-100 to-slate-200">
+                                <tr>
+                                    <th class="text-left px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Book</th>
+                                    <th class="text-left px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Quantity</th>
+                                    <th class="text-left px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Unit Price</th>
+                                    <th class="text-left px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                ${items.map(li => `
+                                    <tr class="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all">
+                                        <td class="px-6 py-4 text-sm font-semibold text-slate-900">${escapeHtml(li.bookTitle ?? 'Unknown Book')}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                                                ${li.quantity}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-600 font-medium">₱${formatMoney(li.unitPrice)}</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-slate-900">₱${formatMoney(li.lineTotal)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = `
+                <div class="text-center py-8 text-red-600 bg-red-50 rounded-xl border-2 border-red-200">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="font-semibold">Failed to load items</p>
+                    <p class="text-sm mt-1">${escapeHtml(e.message)}</p>
+                </div>
+            `;
+            showToast('Failed to load order items', 'error');
+        }
+    }
+
+    // ========== Cancel Order ==========
+    async function cancelOrder(orderId) {
+        // Create custom confirmation modal using toast-style
+        const confirmed = confirm(`Are you sure you want to cancel order #${orderId}?\n\nThis action cannot be undone.`);
+        if (!confirmed) return;
+
+        try {
+            await httpJson(`/api/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken }
+            });
+            showToast('Order cancelled successfully! 🎯', 'success');
+            await loadOrders();
+        } catch (e) {
+            showToast('Failed to cancel order: ' + e.message, 'error');
+        }
+    }
+
+    // ========== Place Order ==========
+    placeBtn.addEventListener('click', async () => {
+        const confirmed = confirm('Place a new order from your current cart?\n\nMake sure you have items in your cart before proceeding.');
+        if (!confirmed) return;
+
+        placeBtn.disabled = true;
+        const oldHTML = placeBtn.innerHTML;
+        placeBtn.innerHTML = `
+            <svg class="animate-spin h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        `;
+
+        try {
+            const order = await httpJson(`/api/orders`, {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken }
+            });
+
+            // Console log the created order data in JSON format
+            console.log('Created order (JSON):', JSON.stringify(order, null, 2));
+            console.log('Created order object:', order);
+
+            showToast(`Order #${order.id} created successfully! 🎉`, 'success');
+            await loadOrders();
+        } catch (e) {
+            showToast('Failed to place order: ' + e.message, 'error');
+        } finally {
+            placeBtn.innerHTML = oldHTML;
+            placeBtn.disabled = false;
+        }
+    });
+
+    // ========== Initialize ==========
+    loadOrders();
+</script>
+</body>
+</html>

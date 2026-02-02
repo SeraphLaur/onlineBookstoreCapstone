@@ -36,6 +36,11 @@ public class Book {
     @Column(nullable = false)
     private Integer stock;
 
+
+    @Column(name = "image_url", length = 2048) // 2048 is common max URL length
+    private String imageUrl;
+
+
     //Getters and Setters
     public Long getId() {
         return id;
@@ -95,5 +100,17 @@ public class Book {
 
     public void setStock(Integer stock) {
         this.stock = stock;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

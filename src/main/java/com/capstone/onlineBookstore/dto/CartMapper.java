@@ -33,7 +33,7 @@ public final class CartMapper {
 
     private static CartLineDto toLineDto(CartItem ci) {
         var book = ci.getBook();
-        var price = book.getPrice(); // BigDecimal field on Book
+        var price = book.getPrice();
         var qty = ci.getQuantity();
         var lineTotal = price.multiply(BigDecimal.valueOf(qty));
 
