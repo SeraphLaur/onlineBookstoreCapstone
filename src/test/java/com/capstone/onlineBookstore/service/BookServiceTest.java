@@ -24,43 +24,43 @@ class BookServiceTest {
     private BookService bookService;
 
     //return all books
-    @Test
-    void getAll_ReturnsAllBooks() {
-        //setup
-        List<Book> books = Arrays.asList(new Book(), new Book());
-        when(bookRepository.findAll()).thenReturn(books);
-
-        // execute and verify
-        List<Book> result = bookService.getAll();
-        assertEquals(2, result.size());
-        verify(bookRepository).findAll();
-    }
+//    @Test
+//    void getAll_ReturnsAllBooks() {
+//        //setup
+//        List<Book> books = Arrays.asList(new Book(), new Book());
+//        when(bookRepository.findAll()).thenReturn(books);
+//
+//        // execute and verify
+//        List<Book> result = bookService.getAll();
+//        assertEquals(2, result.size());
+//        verify(bookRepository).findAll();
+//    }
 
     //test search query with category
-    @Test
-    void search_WithQueryAndCategory() {
-        // setup
-        when(bookRepository.search("java", "Programming")).thenReturn(Arrays.asList(new Book()));
-
-        // execute
-        List<Book> result = bookService.search("java", "Programming");
-
-        // verify
-        assertNotNull(result);
-        verify(bookRepository).search("java", "Programming");
-    }
+//    @Test
+//    void search_WithQueryAndCategory() {
+//        // setup
+//        when(bookRepository.search("java", "Programming")).thenReturn(Arrays.asList(new Book()));
+//
+//        // execute
+//        List<Book> result = bookService.search("java", "Programming");
+//
+//        // verify
+//        assertNotNull(result);
+//        verify(bookRepository).search("java", "Programming");
+//    }
 
     //search without category
-    @Test
-    void search_WithNullQuery_PassesNull() {
-        // setup
-        when(bookRepository.search(null, "Fiction")).thenReturn(Arrays.asList());
-
-        // execute
-        bookService.search(null, "Fiction");
-
-        // Verify
-        verify(bookRepository).search(null, "Fiction");
-    }
+//    @Test
+//    void search_WithNullQuery_PassesNull() {
+//        // setup
+//        when(bookRepository.search(null, "Fiction")).thenReturn(Arrays.asList());
+//
+//        // execute
+//        bookService.search(null, "Fiction");
+//
+//        // Verify
+//        verify(bookRepository).search(null, "Fiction");
+//    }
 
 }

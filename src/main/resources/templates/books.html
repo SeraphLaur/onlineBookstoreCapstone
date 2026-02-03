@@ -247,6 +247,20 @@
         <!-- Books will be injected here -->
     </div>
 
+    <!-- Pagination Controls -->
+    <div class="mt-8 flex items-center justify-center gap-2" id="paginationControls">
+        <button id="prevPage"
+                class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-sm disabled:opacity-50">
+            Prev
+        </button>
+        <span id="pageInfo" class="text-slate-700 font-medium"></span>
+        <button id="nextPage"
+                class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-sm disabled:opacity-50">
+            Next
+        </button>
+
+    </div>
+
     <!-- Empty State -->
     <div id="emptyState" class="hidden text-center py-20 fade-in">
         <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-6">
@@ -273,6 +287,10 @@
     const searchInput = document.getElementById('searchInput');
     const categorySelect = document.getElementById('categorySelect');
     const clearBtn = document.getElementById('clearFiltersBtn');
+
+    let currentPage = 0;
+    let pageSize = 6;
+    let currentSort = 'title,asc';
 
     // ========== Toast Notifications (Bottom Left) ==========
     function showToast(message, type = 'info', duration = 4000) {
@@ -387,39 +405,51 @@
             if (q && q.trim().length > 0) params.set('q', q.trim());
             if (category && category !== 'ALL') params.set('category', category);
 
-            const url = '/api/books' + (params.toString() ? ('?' + params.toString()) : '');
+            // NEW: pagination params
+            params.set('page', currentPage);
+            params.set('size', pageSize);
+            if (currentSort) params.set('sort', currentSort);
+
+            const url = '/api/books?' + params.toString();
+
             statusEl.querySelector('span').textContent = 'Loading books...';
             booksGrid.innerHTML = '';
             emptyState.classList.add('hidden');
 
             const res = await fetch(url, { credentials: 'same-origin' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            const books = await res.json();
 
-            statusEl.querySelector('span').textContent = `Showing ${books.length} book${books.length !== 1 ? 's' : ''}`;
+            const data = await res.json();
 
+            // If you used approach A (Page<Book>), this is correct:
+            const books = data.content ?? [];
+            const totalPages = data.totalPages ?? 0;
+            const totalElements = data.totalElements ?? books.length;
+
+            statusEl.querySelector('span').textContent =
+                `Showing ${books.length} of ${totalElements} book${totalElements !== 1 ? 's' : ''}`;
+
+            // Render items
             if (books.length === 0) {
                 emptyState.classList.remove('hidden');
-                return;
-            }
+            } else {
+                books.forEach((b, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'book-card rounded-2xl shadow-lg border border-slate-200 overflow-hidden fade-in';
+                    card.style.animationDelay = `${idx * 0.05}s`;
 
-            books.forEach((b, idx) => {
-                const card = document.createElement('div');
-                card.className = 'book-card rounded-2xl shadow-lg border border-slate-200 overflow-hidden fade-in';
-                card.style.animationDelay = `${idx * 0.05}s`;
-
-                const stockBadge = b.stock > 0
-                    ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
+                    const stockBadge = b.stock > 0
+                        ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg">
                          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3"/></svg>
                          ${b.stock} in stock
                        </span>`
-                    : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg">
+                        : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg">
                          Out of Stock
                        </span>`;
 
-                const coverUrl = getBookCoverUrl(b);
+                    const coverUrl = getBookCoverUrl(b);
 
-                card.innerHTML = `
+                    card.innerHTML = `
                     <div class="book-cover">
                         <img src="${escapeHtml(coverUrl)}"
                              alt="${escapeHtml(b.title)}"
@@ -467,12 +497,19 @@
                     </div>
                 `;
 
-                booksGrid.appendChild(card);
-            });
+                    booksGrid.appendChild(card);
+                });
 
-            // Wire up add to cart buttons
-            document.querySelectorAll('.add-btn').forEach(btn => {
-                btn.addEventListener('click', () => addToCart(btn.dataset.id, 1, btn));
+                // Wire up add to cart buttons
+                document.querySelectorAll('.add-btn').forEach(btn => {
+                    btn.addEventListener('click', () => addToCart(btn.dataset.id, 1, btn));
+                });
+            }
+
+            // Update pagination UI
+            updatePaginationUI({
+                page: data.number ?? currentPage,
+                totalPages: totalPages
             });
 
         } catch (e) {
@@ -482,6 +519,30 @@
             showToast('Failed to load books: ' + e.message, 'error');
         }
     }
+
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+
+    function updatePaginationUI({ page, totalPages }) {
+        currentPage = page; // sync with backend page
+        pageInfo.textContent = `Page ${page + 1} of ${Math.max(totalPages, 1)}`;
+        prevBtn.disabled = page <= 0;
+        nextBtn.disabled = page + 1 >= totalPages;
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 0) {
+            currentPage -= 1;
+            applyFilters(); // will call loadBooks with same q/category but new page
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        currentPage += 1;
+        applyFilters();
+    });
+
 
     // ========== Add to Cart ==========
     async function addToCart(bookId, qty = 1, buttonEl) {

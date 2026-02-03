@@ -4,6 +4,10 @@ import com.capstone.onlineBookstore.model.Book;
 import com.capstone.onlineBookstore.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;               // <-- correct
+import org.springframework.data.domain.Pageable;          // <-- correct
+
+
 import java.util.List;
 
 /**
@@ -27,8 +31,8 @@ public class BookService {
      *
      * @return the all
      */
-    public List<Book> getAll() {
-        return bookRepository.findAll();
+    public Page<Book> getAll(Pageable pageable) {
+        return bookRepository.findAll(pageable);
     }
 
     /**
@@ -38,10 +42,10 @@ public class BookService {
      * @param category the category
      * @return the list
      */
-    public List<Book> search(String q, String category) {
+    public Page<Book> search(String q, String category, Pageable pageable) {
         String qq = (q == null || q.isBlank()) ? null : q.trim();
         String cc = (category == null || category.isBlank() || "ALL".equalsIgnoreCase(category))
                 ? null : category.trim();
-        return bookRepository.search(qq, cc);
+        return bookRepository.search(qq, cc, pageable);
     }
 }

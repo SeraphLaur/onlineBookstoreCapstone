@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+
+import org.springframework.data.domain.Page;               // <-- correct
+import org.springframework.data.domain.Pageable;          // <-- correct
+
 import java.util.List;
 import java.util.Optional;
 
@@ -70,7 +74,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
              and (:category is null or lower(b.category.name) = lower(:category))
            order by b.title asc
            """)
-    List<Book> search(@Param("q") String q, @Param("category") String category);
+    Page<Book> search(@Param("q") String q, @Param("category") String category, Pageable pageable);
 }
 
 
