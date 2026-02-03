@@ -474,7 +474,7 @@
 
         try {
             await callJson('/api/cart/items/quantity', 'PATCH', { bookId: Number(bookId), qty });
-            showToast('Quantity updated ✓', 'success', 2000);
+            showToast('Quantity updated', 'success', 2000);
         } catch (e) {
             showToast('Failed to update quantity: ' + e.message, 'error');
         }
@@ -500,7 +500,7 @@
 
         try {
             await callNoBody(`/api/cart/items/${bookId}`, 'DELETE');
-            showToast('Item removed from cart ✓', 'success');
+            showToast('Item removed from cart', 'success');
         } catch (e) {
             showToast('Failed to remove item: ' + e.message, 'error');
         }
@@ -513,7 +513,7 @@
 
         try {
             await callNoBody('/api/cart', 'DELETE');
-            showToast('Cart cleared successfully! 🎯', 'success');
+            showToast('Cart cleared successfully!', 'success');
         } catch (e) {
             showToast('Failed to clear cart: ' + e.message, 'error');
         }
@@ -548,7 +548,7 @@
             if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
             const order = await res.json();
 
-            showToast(`Order #${order.id} placed successfully! Redirecting... 🎉`, 'success');
+            showToast(`Order #${order.id} placed successfully! Redirecting...`, 'success');
 
             setTimeout(() => {
                 window.location.href = '/orders';

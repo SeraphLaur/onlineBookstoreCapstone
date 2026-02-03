@@ -450,7 +450,7 @@
                             <div>
                                 <div class="text-xs text-slate-500 font-medium mb-1">Price</div>
                                 <span class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                    $${safe(b.price)}
+                                    ₱${safe(b.price)}
                                 </span>
                             </div>
                             <button data-id="${safe(b.id)}"
@@ -521,7 +521,7 @@
                     Added!
                 </span>
             `;
-            showToast('Book added to cart successfully! 🎉', 'success');
+            showToast('Book added to cart successfully!', 'success');
 
             setTimeout(() => {
                 buttonEl.innerHTML = oldHTML;

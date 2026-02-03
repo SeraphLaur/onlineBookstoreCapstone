@@ -331,17 +331,7 @@
                             </div>
                             <p class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">₱${formatMoney(o.total)}</p>
                         </div>
-                        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-100">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-sm font-medium text-slate-600">Last Updated</p>
-                            </div>
-                            <p class="text-lg font-semibold text-slate-700">${fmtDate(o.updatedAt)}</p>
-                        </div>
+
                     </div>
 
                     <!-- Items Toggle -->
@@ -488,7 +478,7 @@
                 method: 'POST',
                 headers: { [csrfHeader]: csrfToken }
             });
-            showToast('Order cancelled successfully! 🎯', 'success');
+            showToast('Order cancelled successfully!', 'success');
             await loadOrders();
         } catch (e) {
             showToast('Failed to cancel order: ' + e.message, 'error');
@@ -519,7 +509,7 @@
             console.log('Created order (JSON):', JSON.stringify(order, null, 2));
             console.log('Created order object:', order);
 
-            showToast(`Order #${order.id} created successfully! 🎉`, 'success');
+            showToast(`Order #${order.id} created successfully!`, 'success');
             await loadOrders();
         } catch (e) {
             showToast('Failed to place order: ' + e.message, 'error');

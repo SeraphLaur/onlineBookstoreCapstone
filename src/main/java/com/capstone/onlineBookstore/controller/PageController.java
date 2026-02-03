@@ -25,7 +25,7 @@ public class PageController {
      *
      * @return the string
      */
-    @GetMapping
+    @GetMapping("register")
     public String registerPage() {
         return "register";
     }
