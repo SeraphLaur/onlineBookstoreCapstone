@@ -44,7 +44,7 @@ class BookController {
     public Page<BookDto> getBooks(
             @RequestParam(value = "q", required = false) String q,
             @RequestParam(value = "category", required = false) String category,
-            @PageableDefault(size = 12, sort = "Title") Pageable pageable
+            @PageableDefault(size = 12, sort = "title") Pageable pageable
     ) {
         return bookService.search(q, category, pageable)
                 .map(BookDto::fromEntity);
