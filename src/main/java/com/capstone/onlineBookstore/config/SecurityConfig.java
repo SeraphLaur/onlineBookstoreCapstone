@@ -8,6 +8,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -60,9 +61,11 @@ public class SecurityConfig {
                 // Authorize
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/register", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
+
 
                 // Form login
                 .formLogin(form -> form
@@ -70,7 +73,20 @@ public class SecurityConfig {
                         .loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/books", true)
+//                        .defaultSuccessUrl("/books", true)
+                        //success handler to check if the user is admin. if admin redirect to the admin page
+                        //if not, redirect to books page
+                        .successHandler((request, response, authentication) -> {
+                            boolean isAdmin = authentication.getAuthorities().stream()
+                                    .map(GrantedAuthority::getAuthority)
+                                    .anyMatch("ROLE_ADMIN"::equals);
+
+                            if(isAdmin) {
+                                response.sendRedirect("/admin");
+                            } else {
+                                response.sendRedirect("/books");
+                            }
+                        })
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )

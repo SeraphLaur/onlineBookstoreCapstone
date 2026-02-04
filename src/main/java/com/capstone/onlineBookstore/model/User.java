@@ -115,6 +115,10 @@ public class User {
         this.hashedPassword = hashedPassword;
     }
 
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false, foreignKey = @ForeignKey(name = "fk_user_roleId"))
+    private Role role;
     /**
      * Sets id.
      *
@@ -140,5 +144,13 @@ public class User {
      */
     public void setCart(Cart cart) {
         this.cart = cart;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
