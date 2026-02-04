@@ -20,6 +20,8 @@ public class RegisterRequest {
     @NotBlank @Size(min = 8, max = 100)
     private String password;
 
+    private Long roleId;
+
     /**
      * Gets first name.
      *
@@ -76,4 +78,7 @@ public class RegisterRequest {
      * @param password the password
      */
     public void setPassword(String password) {this.password = password;}
+
+    public Long getRoleId() {return roleId;}
+    public void setRoleId(Long roleId) {this.roleId = roleId;}
 }
