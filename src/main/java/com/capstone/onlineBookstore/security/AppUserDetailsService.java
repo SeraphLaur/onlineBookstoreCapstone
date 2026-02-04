@@ -35,10 +35,12 @@ public class AppUserDetailsService implements UserDetailsService {
         User u = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        return org.springframework.security.core.userdetails.User
-                .withUsername(u.getEmail())
-                .password(u.getHashedPassword())
-                .authorities(new SimpleGrantedAuthority(u.getRole().getRoleName()))
-                .build();
+//        return org.springframework.security.core.userdetails.User
+//                .withUsername(u.getEmail())
+//                .password(u.getHashedPassword())
+//                .authorities(new SimpleGrantedAuthority(u.getRole().getRoleName()))
+//                .build();
+
+        return new AppUserDetails(u);
     }
 }
