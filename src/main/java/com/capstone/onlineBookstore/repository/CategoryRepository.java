@@ -8,6 +8,6 @@ import java.util.Optional;
 /**
  * The interface Category repository.
  */
-public interface CategoryRepository extends JpaRepository<Category, Integer> {
+public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 }

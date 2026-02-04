@@ -32,6 +32,10 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, optional = false)
     private Cart cart;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false, foreignKey = @ForeignKey(name = "fk_user_roleId"))
+    private Role role;
+
 
     /**
      * Gets id.
@@ -116,14 +120,7 @@ public class User {
     }
 
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", nullable = false, foreignKey = @ForeignKey(name = "fk_user_roleId"))
-    private Role role;
-    /**
-     * Sets id.
-     *
-     * @param id the id
-     */
+
     public void setId(Long id) {
         this.id = id;
     }

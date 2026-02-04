@@ -1,45 +1,26 @@
 package com.capstone.onlineBookstore.controller;
 
+import com.capstone.onlineBookstore.dto.BookCreateUpdateDto;
 import com.capstone.onlineBookstore.dto.BookDto;
-import com.capstone.onlineBookstore.model.Book;
+import com.capstone.onlineBookstore.service.AdminBookService;
 import com.capstone.onlineBookstore.service.BookService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-
-import java.util.List;
-
-
-/**
- * The type Book controller.
- */
 @RestController
-@RequestMapping("/api/books")
-class BookController {
+@RequestMapping("/api/admin/books")
+class AdminBookController {
 
+    private final AdminBookService adminBookService;
     private final BookService bookService;
 
-    /**
-     * Instantiates a new Book controller.
-     *
-     * @param bookService the book service
-     */
-    public BookController(BookService bookService) {
+    public AdminBookController(AdminBookService adminBookService,  BookService bookService) {
+        this.adminBookService = adminBookService;
         this.bookService = bookService;
     }
 
-    /**
-     * Gets books.
-     *
-     * @param q        the q
-     * @param category the category
-     * @return the books
-     */
     @GetMapping
     public Page<BookDto> getBooks(
             @RequestParam(value = "q", required = false) String q,
@@ -49,4 +30,12 @@ class BookController {
         return bookService.search(q, category, pageable)
                 .map(BookDto::fromEntity);
     }
+
+
+    @PostMapping
+    public BookDto createBook(@RequestBody BookCreateUpdateDto bookDto) {
+        return adminBookService.addNewBook(bookDto);
+    }
+
+
 }

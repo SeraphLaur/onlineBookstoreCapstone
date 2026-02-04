@@ -540,7 +540,7 @@
 
     nextBtn.addEventListener('click', () => {
         currentPage += 1;
-        applyFilters();
+        applyFilters(false);
     });
 
 
@@ -598,7 +598,11 @@
     }
 
     // ========== Filters ==========
-    function applyFilters() {
+    function applyFilters(resetPage = true) {
+        // currentPage = 0;
+        if(resetPage){
+            currentPage = 0;
+        }
         const q = searchInput.value || '';
         const category = categorySelect.value || '';
         loadBooks(q, category);
@@ -632,7 +636,7 @@
         e.preventDefault();
         searchInput.value = '';
         categorySelect.value = 'ALL';
-        applyFilters();
+        applyFilters(false);
         showToast('Filters cleared', 'info', 2000);
     });
 

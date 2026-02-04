@@ -1,5 +1,6 @@
 package com.capstone.onlineBookstore.controller;
 
+import com.capstone.onlineBookstore.dto.CategoryDto;
 import com.capstone.onlineBookstore.model.Category;
 import com.capstone.onlineBookstore.repository.CategoryRepository;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/categories")
-class CategoryController {
+public class CategoryController {
 
     private final CategoryRepository categoryRepository;
 
@@ -27,10 +28,6 @@ class CategoryController {
         this.categoryRepository = categoryRepository;
     }
 
-    /**
-     * The type Category dto.
-     */
-    record CategoryDto(int id, String name) {}
 
     /**
      * List list.
